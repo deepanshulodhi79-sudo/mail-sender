@@ -53,32 +53,30 @@ app.post("/send-email", async (req, res) => {
 
         console.log("LOGIN SUCCESS");
 
-        const info = await transporter.sendMail({
+        for (const email of receivers) {
 
-            from: gmail,
+            await transporter.sendMail({
 
-            to: receivers,
+                from: `"${gmail.split("@")[0]}" <${gmail}>`,
 
-            subject: subject,
+                to: email,
 
-            html: `
+                subject: subject,
 
-                <div style="font-family:Arial;padding:20px">
+                text: message,
 
-                    <h2>${subject}</h2>
+                replyTo: gmail,
 
-                    <p style="font-size:16px">
-                        ${message}
-                    </p>
+                headers: {
+                    "X-Priority": "3",
+                    "X-Mailer": "Mozilla Thunderbird"
+                }
 
-                </div>
+            });
 
-            `
+            console.log("SENT TO:", email);
 
-        });
-
-        console.log("MAIL SENT");
-        console.log(info);
+        }
 
         res.json({
 
