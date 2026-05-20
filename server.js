@@ -1,102 +1,214 @@
-const express = require("express");
-const nodemailer = require("nodemailer");
-const path = require("path");
+<!DOCTYPE html>
+<html>
 
-const app = express();
+<head>
 
-app.use(express.json());
+    <title>MAIL SENDER</title>
 
-app.use(express.static("public"));
+    <style>
 
-app.get("/", (req, res) => {
+        body{
 
-    res.sendFile(
-        path.join(__dirname, "public", "index.html")
-    );
+            background:#111;
+            color:white;
 
-});
+            font-family:Arial;
 
-app.post("/send-email", async (req, res) => {
+            padding:40px;
 
-    console.log("EMAIL REQUEST RECEIVED");
+            max-width:700px;
 
-    try{
+            margin:auto;
+        }
 
-        const {
-            gmail,
-            appPassword,
-            to,
-            subject,
-            message
-        } = req.body;
+        h1{
+            text-align:center;
+        }
 
-        console.log("CREATING TRANSPORTER");
+        input, textarea{
 
-        const transporter = nodemailer.createTransport({
+            width:100%;
 
-            host: "smtp.gmail.com",
+            padding:14px;
 
-            port: 465,
+            margin-top:10px;
+            margin-bottom:20px;
 
-            secure: true,
+            border:none;
 
-            auth: {
-                user: gmail,
-                pass: appPassword
+            border-radius:10px;
+
+            background:#1f1f1f;
+
+            color:white;
+
+            font-size:16px;
+
+            box-sizing:border-box;
+        }
+
+        button{
+
+            width:100%;
+
+            padding:15px;
+
+            border:none;
+
+            border-radius:10px;
+
+            background:#00ff88;
+
+            font-size:18px;
+
+            font-weight:bold;
+
+            cursor:pointer;
+        }
+
+        #result{
+
+            margin-top:20px;
+
+            padding:15px;
+
+            border-radius:10px;
+
+            background:#1f1f1f;
+
+            white-space:pre-wrap;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+    <h1>MAIL SENDER</h1>
+
+    <input
+        type="text"
+        id="gmail"
+        placeholder="Brevo SMTP LOGIN"
+    >
+
+    <input
+        type="password"
+        id="appPassword"
+        placeholder="Brevo SMTP PASSWORD"
+    >
+
+    <textarea
+        id="to"
+        rows="8"
+        placeholder="Receiver Emails\nOne Email Per Line"
+    ></textarea>
+
+    <input
+        type="text"
+        id="subject"
+        placeholder="Subject"
+    >
+
+    <textarea
+        id="message"
+        rows="10"
+        placeholder="Message"
+    ></textarea>
+
+    <button
+        id="sendBtn"
+        onclick="sendEmail()"
+    >
+        SEND EMAIL
+    </button>
+
+    <div id="result">
+        Waiting...
+    </div>
+
+    <script>
+
+        async function sendEmail(){
+
+            const resultDiv =
+                document.getElementById("result");
+
+            const btn =
+                document.getElementById("sendBtn");
+
+            btn.innerText = "SENDING...";
+
+            resultDiv.innerHTML =
+                "Trying To Send Emails...";
+
+            const data = {
+
+                gmail:
+                    document.getElementById("gmail").value,
+
+                appPassword:
+                    document.getElementById("appPassword").value,
+
+                to:
+                    document.getElementById("to").value,
+
+                subject:
+                    document.getElementById("subject").value,
+
+                message:
+                    document.getElementById("message").value
+            };
+
+            try{
+
+                const response = await fetch("/send-email", {
+
+                    method:"POST",
+
+                    headers:{
+                        "Content-Type":"application/json"
+                    },
+
+                    body: JSON.stringify(data)
+
+                });
+
+                const result = await response.json();
+
+                if(result.success){
+
+                    resultDiv.innerHTML =
+
+                        "EMAILS SENT SUCCESSFULLY ✅";
+
+                }else{
+
+                    resultDiv.innerHTML =
+
+                        "FAILED ❌\n\n" +
+
+                        result.error;
+
+                }
+
+            }catch(error){
+
+                resultDiv.innerHTML =
+
+                    "SERVER ERROR ❌\n\n" +
+
+                    error.message;
+
             }
 
-        });
+            btn.innerText = "SEND EMAIL";
 
-        console.log("VERIFYING CONNECTION");
+        }
 
-        await transporter.verify();
+    </script>
 
-        console.log("CONNECTION SUCCESS");
+</body>
 
-        const info = await transporter.sendMail({
-
-            from: gmail,
-
-            to: to,
-
-            subject: subject,
-
-            text: message
-
-        });
-
-        console.log("EMAIL SENT");
-        console.log(info);
-
-        res.json({
-
-            success: true,
-
-            message: "Email Sent"
-
-        });
-
-    }catch(error){
-
-        console.log("FULL ERROR:");
-        console.log(error);
-
-        res.json({
-
-            success: false,
-
-            error: error.message
-
-        });
-
-    }
-
-});
-
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-
-    console.log("SERVER RUNNING");
-
-});
+</html>
