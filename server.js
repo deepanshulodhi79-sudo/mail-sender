@@ -5,22 +5,15 @@ const path = require("path");
 const app = express();
 
 app.use(express.json());
-
 app.use(express.static("public"));
 
 app.get("/", (req, res) => {
-
-    res.sendFile(
-        path.join(__dirname, "public", "index.html")
-    );
-
+    res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 app.post("/send-email", async (req, res) => {
 
-    console.log("EMAIL REQUEST RECEIVED");
-
-    try{
+    try {
 
         const {
             gmail,
@@ -30,21 +23,11 @@ app.post("/send-email", async (req, res) => {
             message
         } = req.body;
 
-        const receivers = to
-            .split("\n")
-            .map(email => email.trim())
-            .filter(email => email);
-
-        console.log("TOTAL RECEIVERS:");
-        console.log(receivers.length);
+        console.log("TRYING LOGIN");
 
         const transporter = nodemailer.createTransport({
 
-            host: "smtp-relay.brevo.com",
-
-            port: 587,
-
-            secure: false,
+            service: "gmail",
 
             auth: {
                 user: gmail,
@@ -53,68 +36,41 @@ app.post("/send-email", async (req, res) => {
 
         });
 
-        console.log("VERIFYING CONNECTION");
-
         await transporter.verify();
 
-        console.log("CONNECTION SUCCESS");
+        console.log("LOGIN SUCCESS");
 
         const info = await transporter.sendMail({
 
             from: gmail,
 
-            to: receivers,
+            to: to,
 
             subject: subject,
 
-            html: `
-
-                <div style="font-family:Arial;padding:20px">
-
-                    <h2>${subject}</h2>
-
-                    <p style="font-size:16px">
-                        ${message}
-                    </p>
-
-                </div>
-
-            `
+            text: message
 
         });
 
-        console.log("EMAIL SENT");
         console.log(info);
 
         res.json({
-
-            success: true,
-
-            message: "Emails Sent Successfully"
-
+            success: true
         });
 
-    }catch(error){
+    } catch (error) {
 
-        console.log("FULL ERROR:");
         console.log(error);
 
         res.json({
-
             success: false,
-
             error: error.message
-
         });
 
     }
 
 });
 
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-
+app.listen(process.env.PORT || 3000, () => {
     console.log("SERVER RUNNING");
-
 });
