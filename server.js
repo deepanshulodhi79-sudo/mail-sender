@@ -21,6 +21,8 @@ app.post("/send-email", async (req, res) => {
         message
     } = req.body;
 
+    console.log("Request Received");
+
     try {
 
         const transporter = nodemailer.createTransport({
@@ -38,7 +40,13 @@ app.post("/send-email", async (req, res) => {
 
         });
 
-        await transporter.sendMail({
+        console.log("Connecting...");
+
+        await transporter.verify();
+
+        console.log("Connected");
+
+        const info = await transporter.sendMail({
 
             from: gmail,
 
@@ -50,13 +58,16 @@ app.post("/send-email", async (req, res) => {
 
         });
 
+        console.log("MAIL SENT");
+
         res.json({
             success: true,
-            message: "Email Sent Successfully"
+            info
         });
 
     } catch (error) {
 
+        console.log("ERROR:");
         console.log(error);
 
         res.json({
