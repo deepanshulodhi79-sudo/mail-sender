@@ -5,25 +5,32 @@ const path = require("path");
 const app = express();
 
 app.use(express.json());
+
 app.use(express.static("public"));
 
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+
+    res.sendFile(
+        path.join(__dirname, "public", "index.html")
+    );
+
 });
 
 app.post("/send-email", async (req, res) => {
 
-    const {
-        gmail,
-        appPassword,
-        to,
-        subject,
-        message
-    } = req.body;
+    console.log("EMAIL REQUEST RECEIVED");
 
-    console.log("Request Received");
+    try{
 
-    try {
+        const {
+            gmail,
+            appPassword,
+            to,
+            subject,
+            message
+        } = req.body;
+
+        console.log("CREATING TRANSPORTER");
 
         const transporter = nodemailer.createTransport({
 
@@ -40,11 +47,11 @@ app.post("/send-email", async (req, res) => {
 
         });
 
-        console.log("Connecting...");
+        console.log("VERIFYING CONNECTION");
 
         await transporter.verify();
 
-        console.log("Connected");
+        console.log("CONNECTION SUCCESS");
 
         const info = await transporter.sendMail({
 
@@ -58,21 +65,28 @@ app.post("/send-email", async (req, res) => {
 
         });
 
-        console.log("MAIL SENT");
+        console.log("EMAIL SENT");
+        console.log(info);
 
         res.json({
+
             success: true,
-            info
+
+            message: "Email Sent"
+
         });
 
-    } catch (error) {
+    }catch(error){
 
-        console.log("ERROR:");
+        console.log("FULL ERROR:");
         console.log(error);
 
         res.json({
+
             success: false,
+
             error: error.message
+
         });
 
     }
@@ -83,6 +97,6 @@ const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
 
-    console.log(`Server Running On Port ${PORT}`);
+    console.log("SERVER RUNNING");
 
 });
