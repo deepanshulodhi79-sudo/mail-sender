@@ -3,16 +3,21 @@
 
 <head>
 
-    <title>Mail Sender</title>
+    <title>MAIL SENDER</title>
 
     <style>
 
         body{
+
             background:#111;
             color:white;
+
             font-family:Arial;
+
             padding:40px;
+
             max-width:700px;
+
             margin:auto;
         }
 
@@ -23,30 +28,39 @@
         input, textarea{
 
             width:100%;
+
             padding:14px;
+
             margin-top:10px;
             margin-bottom:20px;
 
             border:none;
+
             border-radius:10px;
 
             background:#1f1f1f;
+
             color:white;
 
             font-size:16px;
+
+            box-sizing:border-box;
         }
 
         button{
 
             width:100%;
+
             padding:15px;
 
             border:none;
+
             border-radius:10px;
 
             background:#00ff88;
 
             font-size:18px;
+
             font-weight:bold;
 
             cursor:pointer;
@@ -73,17 +87,40 @@
 
     <h1>MAIL SENDER</h1>
 
-    <input type="email" id="gmail" placeholder="Your Gmail">
+    <input
+        type="text"
+        id="gmail"
+        placeholder="Brevo SMTP LOGIN"
+    >
 
-    <input type="password" id="appPassword" placeholder="Google App Password">
+    <input
+        type="password"
+        id="appPassword"
+        placeholder="Brevo SMTP PASSWORD"
+    >
 
-    <input type="email" id="to" placeholder="Receiver Email">
+    <textarea
+        id="to"
+        rows="8"
+        placeholder="Receiver Emails\nOne Email Per Line"
+    ></textarea>
 
-    <input type="text" id="subject" placeholder="Subject">
+    <input
+        type="text"
+        id="subject"
+        placeholder="Subject"
+    >
 
-    <textarea id="message" rows="10" placeholder="Message"></textarea>
+    <textarea
+        id="message"
+        rows="10"
+        placeholder="Message"
+    ></textarea>
 
-    <button id="sendBtn" onclick="sendEmail()">
+    <button
+        id="sendBtn"
+        onclick="sendEmail()"
+    >
         SEND EMAIL
     </button>
 
@@ -104,7 +141,7 @@
             btn.innerText = "SENDING...";
 
             resultDiv.innerHTML =
-                "Trying To Send Email...";
+                "Trying To Send Emails...";
 
             const data = {
 
@@ -144,7 +181,7 @@
 
                     resultDiv.innerHTML =
 
-                        "EMAIL SENT SUCCESSFULLY ✅";
+                        "EMAILS SENT SUCCESSFULLY ✅";
 
                 }else{
 
