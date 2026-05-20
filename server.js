@@ -5,10 +5,15 @@ const path = require("path");
 const app = express();
 
 app.use(express.json());
+
 app.use(express.static("public"));
 
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "public", "index.html"));
+
+    res.sendFile(
+        path.join(__dirname, "public", "index.html")
+    );
+
 });
 
 app.post("/send-email", async (req, res) => {
@@ -23,7 +28,13 @@ app.post("/send-email", async (req, res) => {
             message
         } = req.body;
 
-        console.log("TRYING LOGIN");
+        const receivers = to
+            .split(/[\n,]+/)
+            .map(email => email.trim())
+            .filter(email => email);
+
+        console.log("TOTAL RECEIVERS:");
+        console.log(receivers);
 
         const transporter = nodemailer.createTransport({
 
@@ -36,6 +47,8 @@ app.post("/send-email", async (req, res) => {
 
         });
 
+        console.log("VERIFYING LOGIN");
+
         await transporter.verify();
 
         console.log("LOGIN SUCCESS");
@@ -44,33 +57,59 @@ app.post("/send-email", async (req, res) => {
 
             from: gmail,
 
-            to: to,
+            to: receivers,
 
             subject: subject,
 
-            text: message
+            html: `
+
+                <div style="font-family:Arial;padding:20px">
+
+                    <h2>${subject}</h2>
+
+                    <p style="font-size:16px">
+                        ${message}
+                    </p>
+
+                </div>
+
+            `
 
         });
 
+        console.log("MAIL SENT");
         console.log(info);
 
         res.json({
-            success: true
+
+            success: true,
+
+            message:
+                "Emails Sent Successfully"
+
         });
 
     } catch (error) {
 
+        console.log("FULL ERROR:");
         console.log(error);
 
         res.json({
+
             success: false,
+
             error: error.message
+
         });
 
     }
 
 });
 
-app.listen(process.env.PORT || 3000, () => {
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+
     console.log("SERVER RUNNING");
+
 });
