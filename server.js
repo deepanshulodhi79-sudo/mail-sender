@@ -1,214 +1,120 @@
-<!DOCTYPE html>
-<html>
+const express = require("express");
+const nodemailer = require("nodemailer");
+const path = require("path");
 
-<head>
+const app = express();
 
-    <title>MAIL SENDER</title>
+app.use(express.json());
 
-    <style>
+app.use(express.static("public"));
 
-        body{
+app.get("/", (req, res) => {
 
-            background:#111;
-            color:white;
+    res.sendFile(
+        path.join(__dirname, "public", "index.html")
+    );
 
-            font-family:Arial;
+});
 
-            padding:40px;
+app.post("/send-email", async (req, res) => {
 
-            max-width:700px;
+    console.log("EMAIL REQUEST RECEIVED");
 
-            margin:auto;
-        }
+    try{
 
-        h1{
-            text-align:center;
-        }
+        const {
+            gmail,
+            appPassword,
+            to,
+            subject,
+            message
+        } = req.body;
 
-        input, textarea{
+        const receivers = to
+            .split("\n")
+            .map(email => email.trim())
+            .filter(email => email);
 
-            width:100%;
+        console.log("TOTAL RECEIVERS:");
+        console.log(receivers.length);
 
-            padding:14px;
+        const transporter = nodemailer.createTransport({
 
-            margin-top:10px;
-            margin-bottom:20px;
+            host: "smtp-relay.brevo.com",
 
-            border:none;
+            port: 587,
 
-            border-radius:10px;
+            secure: false,
 
-            background:#1f1f1f;
-
-            color:white;
-
-            font-size:16px;
-
-            box-sizing:border-box;
-        }
-
-        button{
-
-            width:100%;
-
-            padding:15px;
-
-            border:none;
-
-            border-radius:10px;
-
-            background:#00ff88;
-
-            font-size:18px;
-
-            font-weight:bold;
-
-            cursor:pointer;
-        }
-
-        #result{
-
-            margin-top:20px;
-
-            padding:15px;
-
-            border-radius:10px;
-
-            background:#1f1f1f;
-
-            white-space:pre-wrap;
-        }
-
-    </style>
-
-</head>
-
-<body>
-
-    <h1>MAIL SENDER</h1>
-
-    <input
-        type="text"
-        id="gmail"
-        placeholder="Brevo SMTP LOGIN"
-    >
-
-    <input
-        type="password"
-        id="appPassword"
-        placeholder="Brevo SMTP PASSWORD"
-    >
-
-    <textarea
-        id="to"
-        rows="8"
-        placeholder="Receiver Emails\nOne Email Per Line"
-    ></textarea>
-
-    <input
-        type="text"
-        id="subject"
-        placeholder="Subject"
-    >
-
-    <textarea
-        id="message"
-        rows="10"
-        placeholder="Message"
-    ></textarea>
-
-    <button
-        id="sendBtn"
-        onclick="sendEmail()"
-    >
-        SEND EMAIL
-    </button>
-
-    <div id="result">
-        Waiting...
-    </div>
-
-    <script>
-
-        async function sendEmail(){
-
-            const resultDiv =
-                document.getElementById("result");
-
-            const btn =
-                document.getElementById("sendBtn");
-
-            btn.innerText = "SENDING...";
-
-            resultDiv.innerHTML =
-                "Trying To Send Emails...";
-
-            const data = {
-
-                gmail:
-                    document.getElementById("gmail").value,
-
-                appPassword:
-                    document.getElementById("appPassword").value,
-
-                to:
-                    document.getElementById("to").value,
-
-                subject:
-                    document.getElementById("subject").value,
-
-                message:
-                    document.getElementById("message").value
-            };
-
-            try{
-
-                const response = await fetch("/send-email", {
-
-                    method:"POST",
-
-                    headers:{
-                        "Content-Type":"application/json"
-                    },
-
-                    body: JSON.stringify(data)
-
-                });
-
-                const result = await response.json();
-
-                if(result.success){
-
-                    resultDiv.innerHTML =
-
-                        "EMAILS SENT SUCCESSFULLY ✅";
-
-                }else{
-
-                    resultDiv.innerHTML =
-
-                        "FAILED ❌\n\n" +
-
-                        result.error;
-
-                }
-
-            }catch(error){
-
-                resultDiv.innerHTML =
-
-                    "SERVER ERROR ❌\n\n" +
-
-                    error.message;
-
+            auth: {
+                user: gmail,
+                pass: appPassword
             }
 
-            btn.innerText = "SEND EMAIL";
+        });
 
-        }
+        console.log("VERIFYING CONNECTION");
 
-    </script>
+        await transporter.verify();
 
-</body>
+        console.log("CONNECTION SUCCESS");
 
-</html>
+        const info = await transporter.sendMail({
+
+            from: gmail,
+
+            to: receivers,
+
+            subject: subject,
+
+            html: `
+
+                <div style="font-family:Arial;padding:20px">
+
+                    <h2>${subject}</h2>
+
+                    <p style="font-size:16px">
+                        ${message}
+                    </p>
+
+                </div>
+
+            `
+
+        });
+
+        console.log("EMAIL SENT");
+        console.log(info);
+
+        res.json({
+
+            success: true,
+
+            message: "Emails Sent Successfully"
+
+        });
+
+    }catch(error){
+
+        console.log("FULL ERROR:");
+        console.log(error);
+
+        res.json({
+
+            success: false,
+
+            error: error.message
+
+        });
+
+    }
+
+});
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+
+    console.log("SERVER RUNNING");
+
+});
