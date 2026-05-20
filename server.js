@@ -38,7 +38,13 @@ app.post("/send-email", async (req, res) => {
 
         const transporter = nodemailer.createTransport({
 
-            service: "gmail",
+            host: "smtp.gmail.com",
+
+            port: 587,
+
+            secure: false,
+
+            requireTLS: true,
 
             auth: {
                 user: gmail,
@@ -57,20 +63,13 @@ app.post("/send-email", async (req, res) => {
 
             await transporter.sendMail({
 
-                from: `"${gmail.split("@")[0]}" <${gmail}>`,
+                from: gmail,
 
                 to: email,
 
                 subject: subject,
 
-                text: message,
-
-                replyTo: gmail,
-
-                headers: {
-                    "X-Priority": "3",
-                    "X-Mailer": "Mozilla Thunderbird"
-                }
+                text: message
 
             });
 
