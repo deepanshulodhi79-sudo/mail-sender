@@ -4,7 +4,9 @@ const path = require("path");
 
 const app = express();
 
-app.use(express.json());
+app.use(express.json({
+    limit: "10mb"
+}));
 
 app.use(express.static("public"));
 
@@ -33,6 +35,15 @@ app.post("/send-email", async (req, res) => {
             .map(email => email.trim())
             .filter(email => email);
 
+        if(receivers.length === 0){
+
+            return res.json({
+                success: false,
+                error: "No Receiver Emails"
+            });
+
+        }
+
         console.log("TOTAL RECEIVERS:");
         console.log(receivers);
 
@@ -40,26 +51,34 @@ app.post("/send-email", async (req, res) => {
 
             host: "smtp.gmail.com",
 
-            port: 587,
+            port: 465,
 
-            secure: false,
-
-            requireTLS: true,
+            secure: true,
 
             auth: {
                 user: gmail,
                 pass: appPassword
+            },
+
+            tls: {
+                rejectUnauthorized: false
             }
 
         });
-
-        console.log("VERIFYING LOGIN");
 
         await transporter.verify();
 
         console.log("LOGIN SUCCESS");
 
         for (const email of receivers) {
+
+            const cleanMessage =
+
+`Hi,
+
+${message}
+
+Regards`;
 
             await transporter.sendMail({
 
@@ -69,7 +88,9 @@ app.post("/send-email", async (req, res) => {
 
                 subject: subject,
 
-                text: message
+                text: cleanMessage,
+
+                encoding: "utf-8"
 
             });
 
