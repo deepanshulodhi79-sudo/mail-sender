@@ -4,9 +4,7 @@ const path = require("path");
 
 const app = express();
 
-app.use(express.json({
-    limit: "10mb"
-}));
+app.use(express.json());
 
 app.use(express.static("public"));
 
@@ -35,50 +33,18 @@ app.post("/send-email", async (req, res) => {
             .map(email => email.trim())
             .filter(email => email);
 
-        if(receivers.length === 0){
-
-            return res.json({
-                success: false,
-                error: "No Receiver Emails"
-            });
-
-        }
-
-        console.log("TOTAL RECEIVERS:");
-        console.log(receivers);
-
         const transporter = nodemailer.createTransport({
 
-            host: "smtp.gmail.com",
-
-            port: 465,
-
-            secure: true,
+            service: "gmail",
 
             auth: {
                 user: gmail,
                 pass: appPassword
-            },
-
-            tls: {
-                rejectUnauthorized: false
             }
 
         });
 
-        await transporter.verify();
-
-        console.log("LOGIN SUCCESS");
-
         for (const email of receivers) {
-
-            const cleanMessage =
-
-`Hi,
-
-${message}
-
-Regards`;
 
             await transporter.sendMail({
 
@@ -88,46 +54,27 @@ Regards`;
 
                 subject: subject,
 
-                text: cleanMessage,
-
-                encoding: "utf-8"
+                text: message
 
             });
-
-            console.log("SENT TO:", email);
 
         }
 
         res.json({
-
-            success: true,
-
-            message:
-                "Emails Sent Successfully"
-
+            success: true
         });
 
     } catch (error) {
 
-        console.log("FULL ERROR:");
         console.log(error);
 
         res.json({
-
             success: false,
-
             error: error.message
-
         });
 
     }
 
 });
 
-const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-
-    console.log("SERVER RUNNING");
-
-});
+app.listen(process.env.PORT || 3000);
