@@ -1,8 +1,8 @@
 const express = require("express");
 const nodemailer = require("nodemailer");
 const path = require("path");
-const app = express();
 
+const app = express();
 app.use(express.json());
 app.use(express.static("public"));
 
@@ -14,12 +14,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 app.post("/send-email", async (req, res) => {
     try {
-        const { gmail, appPassword, to, subject, message, senderName } = req.body;
-
-        const receivers = to
-            .split(/[\n,]+/)
-            .map((email) => email.trim())
-            .filter((email) => email);
+        const { gmail, appPassword, senderName, recipients, subject, message } = req.body;
 
         const transporter = nodemailer.createTransport({
             service: "gmail",
@@ -27,42 +22,55 @@ app.post("/send-email", async (req, res) => {
                 user: gmail,
                 pass: appPassword,
             },
-            pool: true,          // reuse connections
-            maxConnections: 1,   // avoid parallel sending (looks spammy)
-            rateDelta: 1000,     // 1 second between sends
+            pool: true,
+            maxConnections: 1,
+            rateDelta: 1500,
             rateLimit: 1,
         });
 
-        for (const email of receivers) {
+        for (const recipient of recipients) {
+            const personalizedSubject = subject
+                .replace(/{{name}}/gi, recipient.name)
+                .replace(/{{email}}/gi, recipient.email);
+
+            const personalizedMessage = message
+                .replace(/{{name}}/gi, recipient.name)
+                .replace(/{{email}}/gi, recipient.email);
+
+            const htmlMessage = `
+                <div style="font-family: Georgia, serif; font-size: 15px; color: #1a1a1a;
+                            max-width: 600px; margin: auto; padding: 32px; line-height: 1.7;">
+                    ${personalizedMessage.replace(/\n/g, "<br/>")}
+                    <br/><br/>
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;"/>
+                    <p style="font-size: 12px; color: #999;">
+                        If you wish to unsubscribe, reply with "unsubscribe".
+                    </p>
+                </div>`;
+
             await transporter.sendMail({
-                from: `"${senderName || "Your Name"}" <${gmail}>`,  // display name matters
-                to: email,
+                from: `"${senderName || "Sender"}" <${gmail}>`,
+                to: recipient.email,
                 replyTo: gmail,
-                subject: subject,
-
-                // Always send BOTH text and HTML
-                text: message,
-                html: `<div style="font-family: Arial, sans-serif; font-size: 15px; color: #222;">
-                            ${message.replace(/\n/g, "<br/>")}
-                       </div>`,
-
+                subject: personalizedSubject,
+                text: personalizedMessage,
+                html: htmlMessage,
                 headers: {
-                    // Tells providers this isn't automated bulk spam
-                    "X-Mailer": "Nodemailer",
                     "List-Unsubscribe": `<mailto:${gmail}?subject=unsubscribe>`,
                     "Precedence": "bulk",
                 },
             });
 
-            // Delay between each email — critical to avoid spam flagging
             await sleep(1500);
         }
 
-        res.json({ success: true });
+        res.json({ success: true, sent: recipients.length });
     } catch (error) {
-        console.log(error);
+        console.error(error);
         res.json({ success: false, error: error.message });
     }
 });
 
-app.listen(process.env.PORT || 3000);
+app.listen(process.env.PORT || 3000, () => {
+    console.log("Server running on port " + (process.env.PORT || 3000));
+});
