@@ -23,9 +23,9 @@ app.post("/send-email", async (req, res) => {
                 pass: appPassword,
             },
             pool: true,
-            maxConnections: 1,
-            rateDelta: 1500,
-            rateLimit: 1,
+            maxConnections: 5,
+            rateDelta: 1000,
+            rateLimit: 5,
         });
 
         for (const recipient of recipients) {
@@ -48,7 +48,7 @@ app.post("/send-email", async (req, res) => {
                        </div>`,
             });
 
-            await sleep(1500);
+            await sleep(200);
         }
 
         res.json({ success: true, sent: recipients.length });
