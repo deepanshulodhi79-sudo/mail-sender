@@ -37,28 +37,15 @@ app.post("/send-email", async (req, res) => {
                 .replace(/{{name}}/gi, recipient.name)
                 .replace(/{{email}}/gi, recipient.email);
 
-            const htmlMessage = `
-                <div style="font-family: Georgia, serif; font-size: 15px; color: #1a1a1a;
-                            max-width: 600px; margin: auto; padding: 32px; line-height: 1.7;">
-                    ${personalizedMessage.replace(/\n/g, "<br/>")}
-                    <br/><br/>
-                    <hr style="border: none; border-top: 1px solid #eee; margin: 24px 0;"/>
-                    <p style="font-size: 12px; color: #999;">
-                        If you wish to unsubscribe, reply with "unsubscribe".
-                    </p>
-                </div>`;
-
             await transporter.sendMail({
                 from: `"${senderName || "Sender"}" <${gmail}>`,
                 to: recipient.email,
                 replyTo: gmail,
                 subject: personalizedSubject,
                 text: personalizedMessage,
-                html: htmlMessage,
-                headers: {
-                    "List-Unsubscribe": `<mailto:${gmail}?subject=unsubscribe>`,
-                    "Precedence": "bulk",
-                },
+                html: `<div style="font-family:Arial,sans-serif;font-size:15px;color:#1a1a1a;line-height:1.7;">
+                           ${personalizedMessage.replace(/\n/g, "<br/>")}
+                       </div>`,
             });
 
             await sleep(1500);
